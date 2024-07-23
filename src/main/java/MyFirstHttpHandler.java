@@ -20,7 +20,7 @@ public class MyFirstHttpHandler implements HttpHandler {
 
     @Override
     public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent httpRequestToBeSent) {
-        if (!this.hash.isEmpty()){
+        if (!this.hash.isEmpty() && httpRequestToBeSent.isInScope()){
             HttpRequest request = httpRequestToBeSent.withAddedHeader("X-Hash", this.hash);
             return RequestToBeSentAction.continueWith(request);
         }
@@ -31,22 +31,26 @@ public class MyFirstHttpHandler implements HttpHandler {
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived httpResponseReceived) {
 
-        String input = "";
+        if(httpResponseReceived.initiatingRequest().isInScope()){
 
-        if(httpResponseReceived.hasHeader("Age")){
-            input += httpResponseReceived.headerValue("Age");
-        }
+            String input = "";
 
-        if(httpResponseReceived.hasHeader("Date")){
-            input += httpResponseReceived.headerValue("Date");
-        }
+            if(httpResponseReceived.hasHeader("Age")){
+                input += httpResponseReceived.headerValue("Age");
+            }
 
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(input.getBytes(StandardCharsets.UTF_8));
-            this.hash = HexFormat.of().formatHex(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            if(httpResponseReceived.hasHeader("Date")){
+                input += httpResponseReceived.headerValue("Date");
+            }
+
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                digest.update(input.getBytes(StandardCharsets.UTF_8));
+                this.hash = HexFormat.of().formatHex(digest.digest());
+                MAPI.getApi().logging().logToOutput("Hash generated: " + this.hash);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return null;

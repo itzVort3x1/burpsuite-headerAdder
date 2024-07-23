@@ -5,6 +5,9 @@ public class MyFirstExtension implements BurpExtension {
 
     @Override
     public void initialize(MontoyaApi api) {
+
+        MAPI.initialize(api);
+
         api.extension().setName("MyFirstExtension");
         api.logging().logToOutput("Extension Loaded");
 
@@ -17,6 +20,6 @@ public class MyFirstExtension implements BurpExtension {
         MyFirstHttpHandler handler = new MyFirstHttpHandler(hash);
         api.http().registerHttpHandler(handler);
 
-        api.extension().registerUnloadingHandler(new UnloadingHandler(api, handler));
+        api.extension().registerUnloadingHandler(new UnloadingHandler(handler));
     }
 }
